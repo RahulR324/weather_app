@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather</title>
+  <link rel="shortcut icon" href="assets/cloudy.png" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <div class="search-wrapper">
+      <div class="search-box">
+        <i class="fa fa-magnifying-glass search-icon"></i>
+        <input id="cityInput" type="text" placeholder="Search any city..." autocomplete="off" />
+        <button id="searchBtn" class="search-btn">Search</button>
+      </div>
+    </div>
+
+    <div class="header-info">
+      <div id="cityDate" class="city-date"></div>
+      <div class="greeting-box">
+        <div id="greeting" class="greeting">Good Morning</div>
+        <div id="currentTime" class="time">12:27 PM</div>
+      </div>
+    </div>
+
+    <div id="loader" class="loader hidden">
+      <div class="loader-ring"></div>
+      <p>Fetching latest weather...</p>
+    </div>
+
+    <div id="error" class="error-banner hidden">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span id="errorText"></span>
+    </div>
+
+    <section id="currentWeather" class="current-card hidden"></section>
+
+    <section id="hourlySection" class="hourly-section hidden">
+  <div class="section-header">
+    <h3>Hourly Forecast</h3>
+    <div class="slider-controls">
+      <button id="prevBtn"><i class="fa-solid fa-chevron-left"></i></button>
+      <button id="nextBtn"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div id="hourly" class="hourly-grid"></div>
+</section>
+
+    <section id="forecastSection" class="forecast-section hidden">
+      <h3>5-Day Forecast</h3>
+      <div id="forecast" class="forecast-grid"></div>
+    </section>
+  </main>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
