@@ -6,16 +6,23 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 
-const path = require("path");
+// const path = require("path");
 
-app.use(express.static(path.join(__dirname, "../client")));
+// app.use(express.static(path.join(__dirname, "../client")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/index.html"));
-});
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../client/index.html"));
+// });
 
 const API_KEY = process.env.API_KEY;
 const PORT = process.env.PORT || 5000;
+
+//test route
+app.get("/", (req, res) => {
+  res.json({
+    message: "Weather API is running"
+  });
+});
 
 app.get("/weather", async (req, res) => {
   const city = req.query.city;
@@ -35,6 +42,14 @@ app.get("/weather", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on http://localhost:${PORT}`);
+// });
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
