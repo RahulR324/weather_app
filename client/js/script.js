@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://weather-app-5mg5.vercel.app";
 
 // DOM Elements
 const cityInput = document.getElementById("cityInput");
