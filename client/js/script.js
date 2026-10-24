@@ -3,6 +3,7 @@ const API_BASE = "https://weather-app-5mg5.vercel.app";
 // DOM Elements
 const cityInput = document.getElementById("cityInput");
 const searchBtn = document.getElementById("searchBtn");
+const locationBtn = document.getElementById("locationBtn");
 
 const loaderEl = document.getElementById("loader");
 const errorBox = document.getElementById("error");
@@ -21,6 +22,9 @@ const timeEl = document.getElementById("currentTime");
 // Slider buttons
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
+
+// Track if user manually searched
+let hasUserSearched = false;
 
 // Live clock + greeting
 function updateLiveTimeAndGreeting() {
@@ -64,7 +68,7 @@ function clearPreviousResults() {
   forecastSection.classList.add("hidden");
 }
 
-// Fetch Weather
+// Fetch Weather by City
 async function getWeatherData(city) {
   const trimmed = city.trim();
   if (!trimmed) {
@@ -72,6 +76,7 @@ async function getWeatherData(city) {
     return;
   }
 
+  hasUserSearched = true;
   clearPreviousResults();
   hideError();
   showLoader();
@@ -98,6 +103,103 @@ async function getWeatherData(city) {
   } finally {
     hideLoader();
   }
+}
+
+// Fetch Weather by Coordinates (Current Location)
+async function getWeatherByCoords(lat, lon) {
+  clearPreviousResults();
+  hideError();
+  showLoader();
+
+  try {
+    let response = await fetch(`${API_BASE}/weather?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
+
+    // Fallback: If deployed backend expects city only (HTTP 400), reverse geocode coordinates to city
+    if (!response.ok && response.status === 400) {
+      try {
+        const geoRes = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
+        );
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          const detectedCity = geoData.city || geoData.locality || geoData.principalSubdivision;
+          if (detectedCity) {
+            response = await fetch(`${API_BASE}/weather?city=${encodeURIComponent(detectedCity)}`);
+          }
+        }
+      } catch (geoErr) {
+        console.warn("Reverse geocode fallback error:", geoErr);
+      }
+    }
+
+    if (!response.ok) throw new Error(`Server error ${response.status}`);
+
+    const data = await response.json();
+
+    if (data.cod && data.cod !== "200") {
+      throw new Error(data.message || "Location not found");
+    }
+
+    if (cityInput && data.city?.name) {
+      cityInput.value = data.city.name;
+    }
+
+    renderWeather(data);
+
+  } catch (error) {
+    const msg = error.message.includes("fetch")
+      ? "Cannot connect to server. Make sure backend is running."
+      : error.message;
+
+    showError(msg);
+  } finally {
+    hideLoader();
+  }
+}
+
+// Geolocation Request
+function requestLocation(isManual = false) {
+  if (!navigator.geolocation) {
+    if (isManual) {
+      showError("Geolocation is not supported by your browser");
+    }
+    return;
+  }
+
+  if (isManual && locationBtn) {
+    locationBtn.classList.add("loading");
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      if (locationBtn) locationBtn.classList.remove("loading");
+      // Do not overwrite if user searched manually while auto-prompt was pending
+      if (hasUserSearched && !isManual) return;
+
+      const { latitude, longitude } = position.coords;
+      getWeatherByCoords(latitude, longitude);
+    },
+    (error) => {
+      if (locationBtn) locationBtn.classList.remove("loading");
+      // If user denied or closed on initial auto prompt, keep original behavior silently
+      if (!isManual) return;
+
+      let msg = "Unable to retrieve your location.";
+      if (error.code === error.PERMISSION_DENIED) {
+        msg = "Location permission was denied. Please allow location access or search for a city.";
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+        msg = "Location information is unavailable.";
+      } else if (error.code === error.TIMEOUT) {
+        msg = "Location request timed out.";
+      }
+      showError(msg);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    }
+  );
 }
 
 // Render
@@ -191,3 +293,10 @@ cityInput.addEventListener("keydown", e => {
   if (e.key === "Enter") getWeatherData(cityInput.value);
 });
 searchBtn.addEventListener("click", () => getWeatherData(cityInput.value));
+
+if (locationBtn) {
+  locationBtn.addEventListener("click", () => requestLocation(true));
+}
+
+// Automatically request current location permission on page open
+requestLocation(false);

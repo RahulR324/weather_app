@@ -25,17 +25,21 @@ app.get("/", (req, res) => {
 });
 
 app.get("/weather", async (req, res) => {
-  const city = req.query.city;
-  if (!city) return res.status(400).json({ cod: "400", message: "City is required" });
+  const { city, lat, lon } = req.query;
+  if (!city && (!lat || !lon)) {
+    return res.status(400).json({ cod: "400", message: "City or coordinates (lat and lon) are required" });
+  }
 
   try {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`
-    );
+    const url = (lat && lon)
+      ? `https://api.openweathermap.org/data/2.5/forecast?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&appid=${API_KEY}&units=metric`
+      : `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+
+    const response = await axios.get(url);
     res.json(response.data);
   } catch (error) {
     if (error.response?.status === 404) {
-      return res.status(404).json({ cod: "404", message: "City not found" });
+      return res.status(404).json({ cod: "404", message: "Location not found" });
     }
     console.error(error);
     res.status(500).json({ cod: "500", message: "Failed to fetch weather data" });
