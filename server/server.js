@@ -9,7 +9,7 @@ require("dotenv").config();
 const app = express();
 
 const isProduction = process.env.NODE_ENV === "production";
-const FRONTEND_URL = process.env.FRONTEND_URL || "https://weather-app-5mg5.vercel.app";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://weather-app-jet-two-15.vercel.app";
 
 const logger = pino({
   level: isProduction ? "info" : "debug",

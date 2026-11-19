@@ -1,4 +1,10 @@
-const API_BASE = "https://weather-app-5mg5.vercel.app";
+const API_BASE = (() => {
+  if (window.__ENV__ && window.__ENV__.API_BASE) {
+    return window.__ENV__.API_BASE;
+  }
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  return isLocalhost ? 'http://localhost:5000' : 'https://weather-app-5mg5.vercel.app';
+})();
 
 // DOM Elements
 const cityInput = document.getElementById("cityInput");
@@ -84,7 +90,10 @@ async function getWeatherData(city) {
   try {
     const response = await fetch(`${API_BASE}/weather?city=${encodeURIComponent(trimmed)}`);
 
-    if (!response.ok) throw new Error(`Server error ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server error ${response.status}`);
+    }
 
     const data = await response.json();
 
@@ -132,7 +141,10 @@ async function getWeatherByCoords(lat, lon) {
       }
     }
 
-    if (!response.ok) throw new Error(`Server error ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server error ${response.status}`);
+    }
 
     const data = await response.json();
 
